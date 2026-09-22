@@ -70,3 +70,18 @@ FoodLens
 │
 ├── .gitignore
 └── README.md
+## 🔄 Application Flow
+
+User
+  ↓
+Next.js Frontend
+  ↓
+Node.js + Express REST API
+  ↓
+Gemini AI
+  ↓
+Food & Nutrition Analysis
+  ↓
+MongoDB
+  ↓
+Dashboard / Fridge / Grocery
