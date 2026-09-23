@@ -22,8 +22,6 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-
-
 type Analysis = {
   _id: string;
   foodName: string;
@@ -65,7 +63,6 @@ type GroceryItem = {
   purchased?: boolean;
 };
 
-
 const containerVariants = {
   hidden: {},
   show: {
@@ -84,10 +81,9 @@ const itemVariants = {
   show: {
     opacity: 1,
     y: 0,
-
     transition: {
       duration: 0.55,
-      ease: "easeOut",
+      ease: "easeOut" as const,
     },
   },
 };
@@ -99,44 +95,27 @@ const itemVariants = {
 export default function DashboardPage() {
   const router = useRouter();
 
-  const [stats, setStats] =
-    useState<DashboardData>({
-      totalAnalyses: 0,
-      totalCalories: 0,
-      totalProtein: 0,
-      totalCarbs: 0,
-      totalFat: 0,
-    });
+  const [stats, setStats] = useState<DashboardData>({
+    totalAnalyses: 0,
+    totalCalories: 0,
+    totalProtein: 0,
+    totalCarbs: 0,
+    totalFat: 0,
+  });
 
-  const [recentAnalyses, setRecentAnalyses] =
-    useState<Analysis[]>([]);
-
-  const [fridgeItems, setFridgeItems] =
-    useState<FridgeItem[]>([]);
-
-  const [groceryItems, setGroceryItems] =
-    useState<GroceryItem[]>([]);
-
-  const [userName, setUserName] =
-    useState("User");
-
-  const [loading, setLoading] =
-    useState(true);
+  const [recentAnalyses, setRecentAnalyses] = useState<Analysis[]>([]);
+  const [fridgeItems, setFridgeItems] = useState<FridgeItem[]>([]);
+  const [groceryItems, setGroceryItems] = useState<GroceryItem[]>([]);
+  const [userName, setUserName] = useState("User");
+  const [loading, setLoading] = useState(true);
 
   /* ================================================= */
   /* INITIAL LOAD */
   /* ================================================= */
 
   useEffect(() => {
-    const token =
-      localStorage.getItem(
-        "foodlens_token"
-      );
-
-    const storedUser =
-      localStorage.getItem(
-        "foodlens_user"
-      );
+    const token = localStorage.getItem("foodlens_token");
+    const storedUser = localStorage.getItem("foodlens_user");
 
     if (!token) {
       router.push("/login");
@@ -145,12 +124,8 @@ export default function DashboardPage() {
 
     if (storedUser) {
       try {
-        const user =
-          JSON.parse(storedUser);
-
-        setUserName(
-          user.name || "User"
-        );
+        const user = JSON.parse(storedUser);
+        setUserName(user.name || "User");
       } catch {
         setUserName("User");
       }
@@ -163,204 +138,159 @@ export default function DashboardPage() {
   /* FETCH ALL DATA */
   /* ================================================= */
 
-  const fetchAllDashboardData =
-    async (token: string) => {
-      try {
-        setLoading(true);
+  const fetchAllDashboardData = async (token: string) => {
+    try {
+      setLoading(true);
 
-        await Promise.all([
-          fetchDashboard(token),
-          fetchFridge(token),
-          fetchGrocery(token),
-        ]);
-      } catch (error) {
-        console.error(
-          "Dashboard loading error:",
-          error
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+      await Promise.all([
+        fetchDashboard(token),
+        fetchFridge(token),
+        fetchGrocery(token),
+      ]);
+    } catch (error) {
+      console.error("Dashboard loading error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   /* ================================================= */
   /* FETCH DASHBOARD */
   /* ================================================= */
 
-  const fetchDashboard =
-    async (token: string) => {
-      try {
-        const response =
-          await fetch(
-            "http://localhost:5000/api/dashboard",
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
-
-        const data =
-          await response.json();
-
-        if (response.status === 401) {
-          handleUnauthorized();
-          return;
+  const fetchDashboard = async (token: string) => {
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/dashboard",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
+      );
 
-        if (!response.ok) {
-          throw new Error(
-            data.message ||
-              "Failed to load dashboard"
-          );
-        }
+      const data = await response.json();
 
-        setStats(
-          data.stats || {
-            totalAnalyses: 0,
-            totalCalories: 0,
-            totalProtein: 0,
-            totalCarbs: 0,
-            totalFat: 0,
-          }
-        );
+      if (response.status === 401) {
+        handleUnauthorized();
+        return;
+      }
 
-        setRecentAnalyses(
-          data.recentAnalyses || []
-        );
-      } catch (error) {
-        console.error(
-          "Dashboard API error:",
-          error
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to load dashboard"
         );
       }
-    };
+
+      setStats(
+        data.stats || {
+          totalAnalyses: 0,
+          totalCalories: 0,
+          totalProtein: 0,
+          totalCarbs: 0,
+          totalFat: 0,
+        }
+      );
+
+      setRecentAnalyses(data.recentAnalyses || []);
+    } catch (error) {
+      console.error("Dashboard API error:", error);
+    }
+  };
 
   /* ================================================= */
   /* FETCH FRIDGE */
   /* ================================================= */
 
-  const fetchFridge =
-    async (token: string) => {
-      try {
-        const response =
-          await fetch(
-            "http://localhost:5000/api/fridge",
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
-
-        const data =
-          await response.json();
-
-        if (response.status === 401) {
-          handleUnauthorized();
-          return;
+  const fetchFridge = async (token: string) => {
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/fridge",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
+      );
 
-        if (!response.ok) {
-          console.error(
-            "Fridge API error:",
-            data.message
-          );
+      const data = await response.json();
 
-          return;
-        }
-
-        setFridgeItems(
-          data.items ||
-            data.inventory?.ingredients ||
-            []
-        );
-      } catch (error) {
-        console.error(
-          "Fridge fetch error:",
-          error
-        );
+      if (response.status === 401) {
+        handleUnauthorized();
+        return;
       }
-    };
+
+      if (!response.ok) {
+        console.error(
+          "Fridge API error:",
+          data.message
+        );
+        return;
+      }
+
+      setFridgeItems(
+        data.items ||
+          data.inventory?.ingredients ||
+          []
+      );
+    } catch (error) {
+      console.error("Fridge fetch error:", error);
+    }
+  };
 
   /* ================================================= */
   /* FETCH GROCERY */
   /* ================================================= */
 
-  const fetchGrocery =
-    async (token: string) => {
-      try {
-        const response =
-          await fetch(
-            "http://localhost:5000/api/grocery",
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
-
-        const data =
-          await response.json();
-
-        if (response.status === 401) {
-          handleUnauthorized();
-          return;
+  const fetchGrocery = async (token: string) => {
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/grocery",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
+      );
 
-        if (!response.ok) {
-          console.error(
-            "Grocery API error:",
-            data.message
-          );
+      const data = await response.json();
 
-          return;
-        }
-
-        setGroceryItems(
-          data.items || []
-        );
-      } catch (error) {
-        console.error(
-          "Grocery fetch error:",
-          error
-        );
+      if (response.status === 401) {
+        handleUnauthorized();
+        return;
       }
-    };
+
+      if (!response.ok) {
+        console.error(
+          "Grocery API error:",
+          data.message
+        );
+        return;
+      }
+
+      setGroceryItems(data.items || []);
+    } catch (error) {
+      console.error("Grocery fetch error:", error);
+    }
+  };
 
   /* ================================================= */
   /* UNAUTHORIZED */
   /* ================================================= */
 
-  const handleUnauthorized =
-    () => {
-      localStorage.removeItem(
-        "foodlens_token"
-      );
-
-      localStorage.removeItem(
-        "foodlens_user"
-      );
-
-      router.push("/login");
-    };
+  const handleUnauthorized = () => {
+    localStorage.removeItem("foodlens_token");
+    localStorage.removeItem("foodlens_user");
+    router.push("/login");
+  };
 
   /* ================================================= */
   /* LOGOUT */
   /* ================================================= */
 
   const logout = () => {
-    localStorage.removeItem(
-      "foodlens_token"
-    );
-
-    localStorage.removeItem(
-      "foodlens_user"
-    );
-
+    localStorage.removeItem("foodlens_token");
+    localStorage.removeItem("foodlens_user");
     router.push("/login");
   };
 
@@ -373,11 +303,9 @@ export default function DashboardPage() {
       ? Math.round(
           recentAnalyses.reduce(
             (total, item) =>
-              total +
-              item.healthScore,
+              total + item.healthScore,
             0
-          ) /
-            recentAnalyses.length
+          ) / recentAnalyses.length
         )
       : 0;
 
@@ -385,11 +313,9 @@ export default function DashboardPage() {
   /* PENDING GROCERY */
   /* ================================================= */
 
-  const pendingGroceries =
-    groceryItems.filter(
-      (item) =>
-        !item.purchased
-    ).length;
+  const pendingGroceries = groceryItems.filter(
+    (item) => !item.purchased
+  ).length;
 
   /* ================================================= */
   /* RETURN */
@@ -412,7 +338,7 @@ export default function DashboardPage() {
           transition={{
             duration: 8,
             repeat: Infinity,
-            ease: "easeInOut",
+            ease: "easeInOut" as const,
           }}
           className="absolute -left-32 top-32 h-72 w-72 rounded-full bg-[#d8f3e3] opacity-60 blur-3xl"
         />
@@ -425,7 +351,7 @@ export default function DashboardPage() {
           transition={{
             duration: 10,
             repeat: Infinity,
-            ease: "easeInOut",
+            ease: "easeInOut" as const,
           }}
           className="absolute right-[-100px] top-20 h-80 w-80 rounded-full bg-[#e5f3c9] opacity-60 blur-3xl"
         />
@@ -437,7 +363,7 @@ export default function DashboardPage() {
           transition={{
             duration: 7,
             repeat: Infinity,
-            ease: "easeInOut",
+            ease: "easeInOut" as const,
           }}
           className="absolute bottom-0 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-[#dff4e7] opacity-40 blur-3xl"
         />
@@ -451,8 +377,6 @@ export default function DashboardPage() {
       <header className="sticky top-0 z-50 border-b border-[#dce8df]/80 bg-white/80 backdrop-blur-xl">
 
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
-
-          {/* LOGO */}
 
           <Link
             href="/dashboard"
@@ -470,7 +394,6 @@ export default function DashboardPage() {
             </motion.div>
 
             <div>
-
               <h1 className="text-lg font-bold">
                 Food
                 <span className="text-[#22a06b]">
@@ -481,7 +404,6 @@ export default function DashboardPage() {
               <p className="text-[9px] tracking-[0.25em] text-gray-500">
                 SNAP • ANALYZE • EAT
               </p>
-
             </div>
 
           </Link>
@@ -492,38 +414,26 @@ export default function DashboardPage() {
 
             <NavLink
               href="/dashboard"
-              icon={
-                <BarChart3 size={15} />
-              }
+              icon={<BarChart3 size={15} />}
               label="Dashboard"
               active
             />
 
             <NavLink
               href="/analyze"
-              icon={
-                <Camera size={15} />
-              }
+              icon={<Camera size={15} />}
               label="Analyze Food"
             />
 
             <NavLink
               href="/fridge"
-              icon={
-                <Refrigerator
-                  size={15}
-                />
-              }
+              icon={<Refrigerator size={15} />}
               label="My Fridge"
             />
 
             <NavLink
               href="/grocery"
-              icon={
-                <ShoppingCart
-                  size={15}
-                />
-              }
+              icon={<ShoppingCart size={15} />}
               label="Grocery"
             />
 
@@ -655,9 +565,7 @@ export default function DashboardPage() {
                     className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-3.5 font-bold text-white backdrop-blur transition hover:bg-white/15"
                   >
 
-                    <Refrigerator
-                      size={18}
-                    />
+                    <Refrigerator size={18} />
 
                     My Fridge
 
@@ -668,9 +576,7 @@ export default function DashboardPage() {
               </div>
 
               <HealthCircle
-                score={
-                  averageHealthScore
-                }
+                score={averageHealthScore}
               />
 
             </div>
@@ -702,9 +608,7 @@ export default function DashboardPage() {
 
               <FeatureCard
                 href="/analyze"
-                icon={
-                  <Camera size={25} />
-                }
+                icon={<Camera size={25} />}
                 title="Food Analyzer"
                 description="Upload a food image and get AI-powered nutrition insights."
                 badge="AI POWERED"
@@ -712,11 +616,7 @@ export default function DashboardPage() {
 
               <FeatureCard
                 href="/fridge"
-                icon={
-                  <Refrigerator
-                    size={25}
-                  />
-                }
+                icon={<Refrigerator size={25} />}
                 title="My Fridge"
                 description="Track the food items currently available in your fridge."
                 badge={`${fridgeItems.length} ITEMS`}
@@ -724,11 +624,7 @@ export default function DashboardPage() {
 
               <FeatureCard
                 href="/grocery"
-                icon={
-                  <ShoppingCart
-                    size={25}
-                  />
-                }
+                icon={<ShoppingCart size={25} />}
                 title="Grocery List"
                 description="Manage your shopping list and track purchased items."
                 badge={`${pendingGroceries} PENDING`}
@@ -747,63 +643,42 @@ export default function DashboardPage() {
             className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
           >
 
-            <motion.div
-              variants={itemVariants}
-            >
+            <motion.div variants={itemVariants}>
               <StatCard
-                icon={
-                  <Apple size={21} />
-                }
+                icon={<Apple size={21} />}
                 title="Meals Tracked"
-                value={
-                  stats.totalAnalyses
-                }
+                value={stats.totalAnalyses}
                 suffix=""
               />
             </motion.div>
 
-            <motion.div
-              variants={itemVariants}
-            >
+            <motion.div variants={itemVariants}>
               <StatCard
-                icon={
-                  <Flame size={21} />
-                }
+                icon={<Flame size={21} />}
                 title="Calories"
-                value={Math.round(
-                  stats.totalCalories
-                )}
+                value={Math.round(stats.totalCalories)}
                 suffix="kcal"
               />
             </motion.div>
 
-            <motion.div
-              variants={itemVariants}
-            >
+            <motion.div variants={itemVariants}>
               <StatCard
-                icon={
-                  <Beef size={21} />
-                }
+                icon={<Beef size={21} />}
                 title="Protein"
                 value={
                   Math.round(
-                    stats.totalProtein *
-                      10
+                    stats.totalProtein * 10
                   ) / 10
                 }
                 suffix="g"
               />
             </motion.div>
 
-            <motion.div
-              variants={itemVariants}
-            >
+            <motion.div variants={itemVariants}>
               <StatCard
                 icon={<HeartIcon />}
                 title="Avg. Health Score"
-                value={
-                  averageHealthScore
-                }
+                value={averageHealthScore}
                 suffix="/100"
               />
             </motion.div>
@@ -828,9 +703,7 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-2">
 
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8f5ec] text-[#22a06b]">
-                    <Refrigerator
-                      size={20}
-                    />
+                    <Refrigerator size={20} />
                   </div>
 
                   <div>
@@ -852,51 +725,34 @@ export default function DashboardPage() {
                   className="flex items-center gap-1 text-sm font-bold text-[#22a06b]"
                 >
                   View
-                  <ArrowRight
-                    size={15}
-                  />
+                  <ArrowRight size={15} />
                 </Link>
 
               </div>
 
               {loading ? (
-
                 <LoadingGrid />
-
-              ) : fridgeItems.length ===
-                0 ? (
-
+              ) : fridgeItems.length === 0 ? (
                 <EmptyModule
-                  icon={
-                    <Refrigerator
-                      size={25}
-                    />
-                  }
+                  icon={<Refrigerator size={25} />}
                   title="Your fridge is empty"
                   text="Add food items to start managing your inventory."
                   href="/fridge"
                   button="Add Food"
                 />
-
               ) : (
-
                 <div className="mt-6 grid grid-cols-2 gap-3">
 
                   {fridgeItems
                     .slice(0, 4)
-                    .map(
-                      (item) => (
-                        <FoodMiniCard
-                          key={
-                            item._id
-                          }
-                          item={item}
-                        />
-                      )
-                    )}
+                    .map((item) => (
+                      <FoodMiniCard
+                        key={item._id}
+                        item={item}
+                      />
+                    ))}
 
                 </div>
-
               )}
 
             </motion.section>
@@ -913,9 +769,7 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-2">
 
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff4df] text-[#d58a18]">
-                    <ShoppingCart
-                      size={20}
-                    />
+                    <ShoppingCart size={20} />
                   </div>
 
                   <div>
@@ -937,108 +791,74 @@ export default function DashboardPage() {
                   className="flex items-center gap-1 text-sm font-bold text-[#22a06b]"
                 >
                   View
-                  <ArrowRight
-                    size={15}
-                  />
+                  <ArrowRight size={15} />
                 </Link>
 
               </div>
 
               {loading ? (
-
                 <LoadingGrid />
-
-              ) : groceryItems.length ===
-                0 ? (
-
+              ) : groceryItems.length === 0 ? (
                 <EmptyModule
-                  icon={
-                    <ShoppingCart
-                      size={25}
-                    />
-                  }
+                  icon={<ShoppingCart size={25} />}
                   title="No grocery items"
                   text="Create your shopping list and keep everything organized."
                   href="/grocery"
                   button="Add Grocery"
                 />
-
               ) : (
-
                 <div className="mt-6 space-y-3">
 
                   {groceryItems
                     .filter(
-                      (item) =>
-                        !item.purchased
+                      (item) => !item.purchased
                     )
                     .slice(0, 4)
-                    .map(
-                      (item) => (
+                    .map((item) => (
+                      <div
+                        key={item._id}
+                        className="flex items-center justify-between rounded-2xl border border-[#e7eee9] bg-[#f9fcfa] p-3"
+                      >
 
-                        <div
-                          key={
-                            item._id
-                          }
-                          className="flex items-center justify-between rounded-2xl border border-[#e7eee9] bg-[#f9fcfa] p-3"
-                        >
+                        <div className="flex min-w-0 items-center gap-3">
 
-                          <div className="flex min-w-0 items-center gap-3">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#e8f5ec] text-[#22a06b]">
 
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#e8f5ec] text-[#22a06b]">
-
-                              {item.imageUrl ? (
-
-                                <img
-                                  src={
-                                    item.imageUrl
-                                  }
-                                  alt={
-                                    item.name
-                                  }
-                                  className="h-full w-full object-cover"
-                                />
-
-                              ) : (
-
-                                <Package
-                                  size={18}
-                                />
-
-                              )}
-
-                            </div>
-
-                            <div className="min-w-0">
-
-                              <p className="truncate text-sm font-bold">
-                                {
-                                  item.name
-                                }
-                              </p>
-
-                              <p className="text-xs text-gray-500">
-                                {item.quantity ||
-                                  1}{" "}
-                                {item.unit ||
-                                  "item"}
-                              </p>
-
-                            </div>
+                            {item.imageUrl ? (
+                              <img
+                                src={item.imageUrl}
+                                alt={item.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <Package size={18} />
+                            )}
 
                           </div>
 
-                          <span className="rounded-full bg-[#fff4df] px-2.5 py-1 text-[10px] font-bold text-[#c47c11]">
-                            TO BUY
-                          </span>
+                          <div className="min-w-0">
+
+                            <p className="truncate text-sm font-bold">
+                              {item.name}
+                            </p>
+
+                            <p className="text-xs text-gray-500">
+                              {item.quantity || 1}{" "}
+                              {item.unit || "item"}
+                            </p>
+
+                          </div>
 
                         </div>
 
-                      )
-                    )}
+                        <span className="rounded-full bg-[#fff4df] px-2.5 py-1 text-[10px] font-bold text-[#c47c11]">
+                          TO BUY
+                        </span>
+
+                      </div>
+                    ))}
 
                 </div>
-
               )}
 
             </motion.section>
@@ -1073,39 +893,27 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#e8f5ec] text-[#22a06b]">
-                  <BarChart3
-                    size={22}
-                  />
+                  <BarChart3 size={22} />
                 </div>
 
               </div>
 
               {loading ? (
-
                 <div className="mt-8 space-y-4">
 
-                  {[1, 2, 3].map(
-                    (item) => (
-                      <div
-                        key={item}
-                        className="h-20 animate-pulse rounded-2xl bg-gray-100"
-                      />
-                    )
-                  )}
+                  {[1, 2, 3].map((item) => (
+                    <div
+                      key={item}
+                      className="h-20 animate-pulse rounded-2xl bg-gray-100"
+                    />
+                  ))}
 
                 </div>
-
-              ) : recentAnalyses.length ===
-                0 ? (
-
+              ) : recentAnalyses.length === 0 ? (
                 <div className="mt-8 rounded-3xl border-2 border-dashed border-[#dce8df] p-10 text-center">
 
                   <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#e8f5ec] text-[#22a06b]">
-
-                    <Apple
-                      size={29}
-                    />
-
+                    <Apple size={29} />
                   </div>
 
                   <h3 className="mt-5 font-bold">
@@ -1121,27 +929,17 @@ export default function DashboardPage() {
                     className="mx-auto mt-5 flex w-fit items-center gap-2 rounded-xl bg-[#12372a] px-5 py-3 text-sm font-bold text-white"
                   >
                     Analyze Food
-                    <ArrowRight
-                      size={16}
-                    />
+                    <ArrowRight size={16} />
                   </Link>
 
                 </div>
-
               ) : (
-
                 <div className="mt-6 space-y-3">
 
                   {recentAnalyses.map(
-                    (
-                      item,
-                      index
-                    ) => (
-
+                    (item, index) => (
                       <motion.div
-                        key={
-                          item._id
-                        }
+                        key={item._id}
                         initial={{
                           opacity: 0,
                           x: -20,
@@ -1151,25 +949,17 @@ export default function DashboardPage() {
                           x: 0,
                         }}
                         transition={{
-                          delay:
-                            index *
-                            0.08,
+                          delay: index * 0.08,
                         }}
                       >
-
                         <AnalysisItem
-                          analysis={
-                            item
-                          }
+                          analysis={item}
                         />
-
                       </motion.div>
-
                     )
                   )}
 
                 </div>
-
               )}
 
             </motion.section>
@@ -1202,11 +992,7 @@ export default function DashboardPage() {
                 <div className="mt-7 space-y-5">
 
                   <NutritionRow
-                    icon={
-                      <Flame
-                        size={18}
-                      />
-                    }
+                    icon={<Flame size={18} />}
                     label="Calories"
                     value={`${Math.round(
                       stats.totalCalories
@@ -1214,41 +1000,26 @@ export default function DashboardPage() {
                   />
 
                   <NutritionRow
-                    icon={
-                      <Beef
-                        size={18}
-                      />
-                    }
+                    icon={<Beef size={18} />}
                     label="Protein"
                     value={`${Math.round(
-                      stats.totalProtein *
-                        10
+                      stats.totalProtein * 10
                     ) / 10} g`}
                   />
 
                   <NutritionRow
-                    icon={
-                      <Wheat
-                        size={18}
-                      />
-                    }
+                    icon={<Wheat size={18} />}
                     label="Carbohydrates"
                     value={`${Math.round(
-                      stats.totalCarbs *
-                        10
+                      stats.totalCarbs * 10
                     ) / 10} g`}
                   />
 
                   <NutritionRow
-                    icon={
-                      <Droplets
-                        size={18}
-                      />
-                    }
+                    icon={<Droplets size={18} />}
                     label="Fat"
                     value={`${Math.round(
-                      stats.totalFat *
-                        10
+                      stats.totalFat * 10
                     ) / 10} g`}
                   />
 
@@ -1258,9 +1029,7 @@ export default function DashboardPage() {
                   href="/analyze"
                   className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3.5 font-bold text-[#12372a] transition hover:-translate-y-1 hover:bg-gray-100"
                 >
-                  <Sparkles
-                    size={18}
-                  />
+                  <Sparkles size={18} />
                   Analyze Another Meal
                 </Link>
 
@@ -1307,9 +1076,7 @@ export default function DashboardPage() {
 
             </div>
 
-            {recentAnalyses.length ===
-            0 ? (
-
+            {recentAnalyses.length === 0 ? (
               <div className="mt-6 rounded-3xl border-2 border-dashed border-[#dce8df] p-8 text-center">
 
                 <Camera
@@ -1326,30 +1093,19 @@ export default function DashboardPage() {
                 </p>
 
               </div>
-
             ) : (
-
               <div className="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
 
                 {recentAnalyses
                   .slice(0, 5)
-                  .map(
-                    (item) => (
-
-                      <FoodImageCard
-                        key={
-                          item._id
-                        }
-                        analysis={
-                          item
-                        }
-                      />
-
-                    )
-                  )}
+                  .map((item) => (
+                    <FoodImageCard
+                      key={item._id}
+                      analysis={item}
+                    />
+                  ))}
 
               </div>
-
             )}
 
           </motion.section>
@@ -1378,31 +1134,21 @@ export default function DashboardPage() {
             <div className="grid gap-4 md:grid-cols-3">
 
               <QuickCard
-                icon={
-                  <Camera size={22} />
-                }
+                icon={<Camera size={22} />}
                 title="Analyze Food"
                 text="Use AI to understand your next meal."
                 href="/analyze"
               />
 
               <QuickCard
-                icon={
-                  <Refrigerator
-                    size={22}
-                  />
-                }
+                icon={<Refrigerator size={22} />}
                 title="Manage Fridge"
                 text="Track the food available in your fridge."
                 href="/fridge"
               />
 
               <QuickCard
-                icon={
-                  <ShoppingCart
-                    size={22}
-                  />
-                }
+                icon={<ShoppingCart size={22} />}
                 title="Manage Grocery"
                 text="Create and organize your shopping list."
                 href="/grocery"
@@ -1478,7 +1224,6 @@ function FeatureCard({
 }) {
   return (
     <Link href={href}>
-
       <motion.div
         whileHover={{
           y: -6,
@@ -1516,18 +1261,14 @@ function FeatureCard({
         </p>
 
         <div className="mt-4 flex items-center gap-1 text-sm font-bold text-[#22a06b]">
-
           Open
-
           <ArrowRight
             size={15}
             className="transition group-hover:translate-x-1"
           />
-
         </div>
 
       </motion.div>
-
     </Link>
   );
 }
@@ -1540,14 +1281,12 @@ function LoadingGrid() {
   return (
     <div className="mt-6 grid grid-cols-2 gap-3">
 
-      {[1, 2, 3, 4].map(
-        (item) => (
-          <div
-            key={item}
-            className="h-20 animate-pulse rounded-2xl bg-gray-100"
-          />
-        )
-      )}
+      {[1, 2, 3, 4].map((item) => (
+        <div
+          key={item}
+          className="h-20 animate-pulse rounded-2xl bg-gray-100"
+        />
+      ))}
 
     </div>
   );
@@ -1612,17 +1351,13 @@ function FoodMiniCard({
       <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#e8f5ec] text-[#22a06b]">
 
         {item.imageUrl ? (
-
           <img
             src={item.imageUrl}
             alt={item.name}
             className="h-full w-full object-cover"
           />
-
         ) : (
-
           <Apple size={19} />
-
         )}
 
       </div>
@@ -1664,25 +1399,18 @@ function FoodImageCard({
       <div className="relative h-36 overflow-hidden bg-[#e8f5ec]">
 
         {analysis.imageUrl ? (
-
           <img
             src={analysis.imageUrl}
             alt={analysis.foodName}
             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
             onError={(event) => {
-              event.currentTarget.style.display =
-                "none";
+              event.currentTarget.style.display = "none";
             }}
           />
-
         ) : (
-
           <div className="flex h-full items-center justify-center text-[#22a06b]">
-
             <Apple size={36} />
-
           </div>
-
         )}
 
         <div className="absolute left-2 top-2 rounded-full bg-[#12372a]/85 px-2.5 py-1 text-[9px] font-bold text-white backdrop-blur">
@@ -1700,10 +1428,7 @@ function FoodImageCard({
         <div className="mt-2 flex items-center justify-between">
 
           <span className="text-xs text-gray-500">
-            {Math.round(
-              analysis.calories
-            )}{" "}
-            kcal
+            {Math.round(analysis.calories)} kcal
           </span>
 
           <span className="rounded-full bg-[#e8f5ec] px-2 py-1 text-[10px] font-bold text-[#22a06b]">
@@ -1734,8 +1459,7 @@ function HealthCircle({
 
   const progress =
     circumference -
-    (score / 100) *
-      circumference;
+    (score / 100) * circumference;
 
   return (
     <motion.div
@@ -1780,21 +1504,17 @@ function HealthCircle({
             stroke="#62d995"
             strokeWidth="12"
             strokeLinecap="round"
-            strokeDasharray={
-              circumference
-            }
+            strokeDasharray={circumference}
             initial={{
-              strokeDashoffset:
-                circumference,
+              strokeDashoffset: circumference,
             }}
             animate={{
-              strokeDashoffset:
-                progress,
+              strokeDashoffset: progress,
             }}
             transition={{
               duration: 1.5,
               delay: 0.5,
-              ease: "easeOut",
+              ease: "easeOut" as const,
             }}
           />
 
@@ -1910,10 +1630,9 @@ function AnalysisItem({
 }: {
   analysis: Analysis;
 }) {
-  const date =
-    new Date(
-      analysis.createdAt
-    );
+  const date = new Date(
+    analysis.createdAt
+  );
 
   return (
     <motion.div
@@ -1926,8 +1645,6 @@ function AnalysisItem({
 
       <div className="flex min-w-0 items-center gap-4">
 
-        {/* ORIGINAL FOOD IMAGE */}
-
         <motion.div
           whileHover={{
             rotate: -8,
@@ -1937,21 +1654,13 @@ function AnalysisItem({
         >
 
           {analysis.imageUrl ? (
-
             <img
-              src={
-                analysis.imageUrl
-              }
-              alt={
-                analysis.foodName
-              }
+              src={analysis.imageUrl}
+              alt={analysis.foodName}
               className="h-full w-full object-cover"
             />
-
           ) : (
-
             <Apple size={22} />
-
           )}
 
         </motion.div>
@@ -1972,16 +1681,11 @@ function AnalysisItem({
             </span>
 
             <span>
-              {analysis.protein}g
-              {" "}
-              protein
+              {analysis.protein}g protein
             </span>
 
             <span className="font-semibold text-[#22a06b]">
-              Score{" "}
-              {
-                analysis.healthScore
-              }
+              Score {analysis.healthScore}
             </span>
 
           </div>
@@ -2106,14 +1810,11 @@ function QuickCard({
         </p>
 
         <div className="mt-4 flex items-center gap-1 text-sm font-bold text-[#22a06b]">
-
           Open
-
           <ArrowRight
             size={15}
             className="transition group-hover:translate-x-1"
           />
-
         </div>
 
       </motion.div>
